@@ -170,9 +170,10 @@ namespace XRL.World.Parts
             foreach (var obj in selection)
                 icons.Add(obj.RenderForUI());
 
-            List<int> results = Popup.PickSeveral(
+            List<ValueTuple<int, int>> results = Popup.PickSeveral(
                 "Which item do you want to get ?",
-                options.ToArray(),
+                Intro: string.Empty,
+                Options: options.ToArray(),
                 AllowEscape: true,
                 Icons: icons.ToArray()
             );
@@ -181,8 +182,8 @@ namespace XRL.World.Parts
 
             var selectedItems = new List<GameObject>();
 
-            foreach (int index in results)
-                selectedItems.Add(selection[index]);
+            foreach (ValueTuple<int, int> result in results)
+                selectedItems.Add(selection[result.Item1]);
 
             AutoAct.Action = new PickupSelection(selectedItems, ParentObject);
             ParentObject.ForfeitTurn(true);

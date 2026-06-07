@@ -8,10 +8,7 @@ using XRL.Rules;
 using XRL.Language;
 using XRL.World.Effects;
 using XRL.World.Conversations;
-using XRL.World.Encounters.EncounterObjectBuilders;
 using Options = QudUX.Concepts.Options;
-using QudUXLogger = QudUX.Utilities.Logger;
-using Battlehub.UIControls;
 using XRL.Messages;
 
 namespace XRL.World.Parts
@@ -163,8 +160,17 @@ namespace XRL.World.Parts
                 if (speaker.HasPart("Restocker"))
                 {
                     _debugSegmentCounter = 7;
-                    Restocker r = speaker.GetPart<Restocker>();
-                    ticksRemaining = r.NextRestockTick - XRLCore.CurrentTurn;
+                    IPart r = speaker.GetPart("Restocker");
+                    Type restockerType = r.GetType();
+                    const System.Reflection.BindingFlags restockerBindingFlags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic;
+                    var restockTickField = restockerType.GetField("NextRestockTick", restockerBindingFlags);
+                    var restockTickProperty = restockerType.GetProperty("NextRestockTick", restockerBindingFlags);
+                    object nextRestockTick = restockTickField?.GetValue(r) ?? restockTickProperty?.GetValue(r, null);
+                    if (nextRestockTick == null)
+                    {
+                        throw new MissingMemberException(restockerType.FullName, "NextRestockTick");
+                    }
+                    ticksRemaining = Convert.ToInt64(nextRestockTick) - XRLCore.CurrentTurn;
                     _debugSegmentCounter = 8;
                 }
                 else if (speaker.HasPart("GenericInventoryRestocker"))
@@ -466,9 +472,10 @@ namespace XRL.World.Parts
                 {
                     if (questGiver.CurrentCell.ParentZone.ZoneID == playerZoneID)
                     {
-                        if (questGiver.HasEffect("QudUX_QuestGiverVision"))
+                        QudUX_QuestGiverVision effect = questGiver.GetEffect<QudUX_QuestGiverVision>();
+                        if (effect != null)
                         {
-                            questGiver.RemoveEffect("QudUX_QuestGiverVision");
+                            questGiver.RemoveEffect(effect);
                         }
                         questGiver.ApplyEffect(new QudUX_QuestGiverVision(QudUX_ConversationHelper.PlayerBody));
                     }

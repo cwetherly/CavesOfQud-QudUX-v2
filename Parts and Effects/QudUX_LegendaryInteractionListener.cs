@@ -125,7 +125,7 @@ namespace XRL.World.Parts
                 return string.Empty;
             }
             List<string> relationList = new List<string>();
-            foreach (string key in legendaryCreature.pBrain.FactionMembership.Keys)
+            foreach (string key in legendaryCreature.Brain.GetVisibleFactionNames())
             {
                 Faction ifExists = Factions.GetIfExists(key);
                 if (ifExists != null && ifExists.Visible)
